@@ -1,0 +1,9 @@
+{
+  "profiles": {
+    "Legal1Up.MailSender": {
+      "commandName": "Project",
+      "commandLineArgs": "--port 7124",
+      "launchBrowser": false
+    }
+  }
+}
