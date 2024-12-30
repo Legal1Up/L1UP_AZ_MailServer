@@ -92,6 +92,33 @@ public class SendEmailFunction
 
         }
     }
+    [Function("TestEmail")]
+    [OpenApiOperation(operationId: "TestEmail", tags: new[] { "Email" })]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: "application/json", 
+        bodyType: typeof(SendEmailResponse), Description = "The OK response")]
+    [OpenApiParameter("x-functions-key", In = ParameterLocation.Header, Required = true, Type = typeof(string))]
+    public async Task<HttpResponseData> TestEmail(
+        [HttpTrigger(AuthorizationLevel.Function, "get")] HttpRequestData req)
+    {
+        try
+        {
+            var response = req.CreateResponse(HttpStatusCode.OK);
+            await response.WriteAsJsonAsync(new { 
+                success = true, 
+                message = "Email service is running" 
+            });
+            return response;
+        }
+        catch (Exception ex)
+        {
+            var response = req.CreateResponse(HttpStatusCode.BadRequest);
+            await response.WriteAsJsonAsync(new { 
+                success = false, 
+                error = ex.Message,
+            });
+            return response;
+        }
+    }
 
 
 }
