@@ -96,7 +96,7 @@ public class SendEmailFunction
     [OpenApiOperation(operationId: "TestEmail", tags: new[] { "Email" })]
     [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: "application/json", 
         bodyType: typeof(SendEmailResponse), Description = "The OK response")]
-    [OpenApiParameter("x-functions-key", In = ParameterLocation.Header, Required = true, Type = typeof(string))]
+    [OpenApiParameter("x-functions-key", In = ParameterLocation.Header, Required = false, Type = typeof(string))]
     public async Task<HttpResponseData> TestEmail(
         [HttpTrigger(AuthorizationLevel.Function, "get")] HttpRequestData req)
     {
