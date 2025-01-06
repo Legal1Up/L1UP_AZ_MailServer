@@ -7,6 +7,7 @@ using Microsoft.Azure.Functions.Worker.Http;
 using Services;
 using Microsoft.Azure.WebJobs.Extensions.OpenApi.Core.Attributes;
 using Microsoft.OpenApi.Models;
+using Microsoft.Azure.Functions.Worker.Extensions.Timer;
 
 
 public class SendEmailFunction
@@ -24,7 +25,6 @@ public class SendEmailFunction
     [OpenApiRequestBody("application/json", typeof(EmailRequest))]
     [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: "application/json", 
         bodyType: typeof(SendEmailResponse), Description = "The OK response")]
-    [OpenApiParameter("x-functions-key", In = ParameterLocation.Header, Required = true, Type = typeof(string))]
     public async Task<HttpResponseData> SendTemplateEmail(
         [HttpTrigger(AuthorizationLevel.Function, "post")] HttpRequestData req)
     {
@@ -35,9 +35,10 @@ public class SendEmailFunction
                 ?? throw new ArgumentNullException("RequestEmail", "Request body cannot be null");
 
             //Revisar que tenga el templateId y el templateData
-            if (string.IsNullOrEmpty(emailRequest.templateId) || emailRequest.templateData == null)
+            if (string.IsNullOrEmpty(emailRequest.templateId) || emailRequest.templateData == null
+                || emailRequest.to == null || !emailRequest.to.Any())
             {
-                throw new ArgumentNullException("TemplateId or TemplateData cannot be null");
+                throw new ArgumentNullException("TemplateId, TemplateData or Recipients cannot be null");
             }
 
             var (success, message) = await _emailWrapper.SendTemplateEmail(emailRequest);
@@ -61,7 +62,6 @@ public class SendEmailFunction
     [OpenApiRequestBody("application/json", typeof(EmailRequest))]
     [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: "application/json", 
         bodyType: typeof(SendEmailResponse), Description = "The OK response")]
-    [OpenApiParameter("x-functions-key", In = ParameterLocation.Header, Required = true, Type = typeof(string))]
     public async Task<HttpResponseData> SendHTMLEmail(
         [HttpTrigger(AuthorizationLevel.Function, "post")] HttpRequestData req)
     {
@@ -70,10 +70,12 @@ public class SendEmailFunction
             string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
             var emailRequest = JsonSerializer.Deserialize<EmailRequest>(requestBody)
                 ?? throw new ArgumentNullException("RequestEmail", "Request body cannot be null");
-            //Revisar que tenga el subject y el body
-            if (string.IsNullOrEmpty(emailRequest.subject) || string.IsNullOrEmpty(emailRequest.body))
+            
+            if (string.IsNullOrEmpty(emailRequest.subject) || 
+                string.IsNullOrEmpty(emailRequest.body) ||
+                emailRequest.to == null || !emailRequest.to.Any())
             {
-                throw new ArgumentNullException("Subject or Body cannot be null");
+                throw new ArgumentNullException("Subject, Body or Recipients cannot be null");
             }
 
             var (success, message) = await _emailWrapper.SendHTMLEmail(emailRequest);
@@ -96,7 +98,6 @@ public class SendEmailFunction
     [OpenApiOperation(operationId: "TestEmail", tags: new[] { "Email" })]
     [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: "application/json", 
         bodyType: typeof(SendEmailResponse), Description = "The OK response")]
-    [OpenApiParameter("x-functions-key", In = ParameterLocation.Header, Required = false, Type = typeof(string))]
     public async Task<HttpResponseData> TestEmail(
         [HttpTrigger(AuthorizationLevel.Function, "get")] HttpRequestData req)
     {
@@ -119,6 +120,7 @@ public class SendEmailFunction
             return response;
         }
     }
+
 
 
 }
